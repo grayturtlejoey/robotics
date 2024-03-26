@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joystick and Sliders</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1>Joystick and Sliders</h1>
+    <div>
+        <canvas id="joystick" width="200" height="200"></canvas>
+    </div>
+    <div>
+        <label for="slider1">Waist:</label>
+        <input type="range" id="slider1" min="-5" max="5" value="0">
+    </div>
+    <div>
+        <label for="slider2">Turn:</label>
+        <input type="range" id="slider2" min="-5" max="5" value="0">
+    </div>
+    <div>
+        <label for="slider3">Tilt:</label>
+        <input type="range" id="slider3" min="-5" max="5" value="0">
+    </div>
+
+    <script>
+        $(document).ready(function(){
+            var canvas = document.getElementById('joystick');
+            var ctx = canvas.getContext('2d');
+            var joystick_x = 100; // initial joystick X position
+            var joystick_y = 100; // initial joystick Y position
+            var dragging = false;
+
+            $('input[type="range"]').change(function(){
+                sendUpdate();
+            });
+
+            function drawJoystick() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.beginPath();
+                ctx.arc(joystick_x, joystick_y, 10, 0, Math.PI * 2);
+                ctx.fillStyle = 'blue';
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            function getMousePos(canvas, evt) {
+                var rect = canvas.getBoundingClientRect();
+                return {
+                    x: evt.clientX - rect.left,
+                    y: evt.clientY - rect.top
+                };
+            }
+
+            canvas.addEventListener('mousedown', function(evt) {
+                var mousePos = getMousePos(canvas, evt);
+                var dx = mousePos.x - joystick_x;
+                var dy = mousePos.y - joystick_y;
+                if (Math.sqrt(dx*dx + dy*dy) <= 10) {
+                    dragging = true;
+                }
+            });
+
+            canvas.addEventListener('mousemove', function(evt) {
+                if (dragging) {
+                    var mousePos = getMousePos(canvas, evt);
+                    joystick_x = mousePos.x;
+                    joystick_y = mousePos.y;
+                    drawJoystick();
+                    sendUpdate();
+                }
+            });
+
+            canvas.addEventListener('mouseup', function(evt) {
+                dragging = false;
+                joystick_x = 100; // reset joystick to center
+                joystick_y = 100; // reset joystick to center
+                drawJoystick();
+                sendUpdate();
+            });
+
+            function sendUpdate() {
+                var slider1 = $('#slider1').val();
+                var slider2 = $('#slider2').val();
+                var slider3 = $('#slider3').val();
+                var data = {
+                    'joystick_x': (100-joystick_x), // normalize joystick X position
+                    'joystick_y': (100-joystick_y), // normalize joystick Y position
+                    'slider1': slider1,
+                    'slider2': slider2,
+                    'slider3': slider3
+                };
+                $.ajax({
+                    url: '/update',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response){
+                        console.log(response);
+                    },
+                    error: function(error){
+                        console.log(error);
+                    }
+                });
+            }
+
+            drawJoystick();
+        });
+    </script>
+</body>
+</html>

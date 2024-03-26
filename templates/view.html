@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Image</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            // Function to update image every 5 seconds
+            function updateImage() {
+                $.getJSON("/get_image", function(data){
+                    $("#dynamic_image").attr("src", data.image_url);
+                });
+            }
+            setInterval(updateImage, 500); // 5000 milliseconds = 5 seconds
+        });
+    </script>
+</head>
+<body>
+    <h1>Dynamic Image</h1>
+    <img id="dynamic_image" src="{{ image_url }}" alt="Dynamic Image">
+</body>
+</html>
